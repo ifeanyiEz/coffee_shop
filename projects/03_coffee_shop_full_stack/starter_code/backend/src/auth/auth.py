@@ -5,9 +5,9 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = 'udacity-fsnd.auth0.com'
+AUTH0_DOMAIN = 'ezufsnd.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'dev'
+API_AUDIENCE = 'https://coffee_shop/'
 
 ## AuthError Exception
 '''
@@ -30,8 +30,50 @@ class AuthError(Exception):
         it should raise an AuthError if the header is malformed
     return the token part of the header
 '''
-def get_token_auth_header():
-   raise Exception('Not Implemented')
+def get_token_auth_header():                    
+    #Obtains access tokens from the authorization header
+
+    try:
+        #Fetch the authorization header
+        auth = request.headers.get('Authorization', None)           
+
+        if not auth:                                        
+        #If no header is present, raise an error
+            raise AuthError({
+                'code': 'authorization_header_missing',
+                'description': 'Authorization header is expected'
+            }, 401)
+        
+        parts = auth.split()
+        #If there's a header, split it at whitespaces to break it into parts
+
+        if parts[0].lower() != 'bearer':
+        #See if the first part contains the string 'bearer', if not raise an error
+            raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Authorization header must start with "Bearer".'
+            }, 401)
+        
+        elif len(parts) == 1:
+        #If the first part contains 'bearer', confirm that there's a second part
+            raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Token not found.'
+            }, 401)
+
+        elif len(parts) > 2:
+        #If there's a second part, confirm that there are only two parts
+            raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Authorization header must be bearer token.'
+            }, 401)
+
+        #If everything is fine, return the second part as the token.
+        token = parts[1]
+        return token
+
+    except:
+        raise Exception('Not Implemented')
 
 '''
 @TODO implement check_permissions(permission, payload) method
@@ -45,7 +87,24 @@ def get_token_auth_header():
     return true otherwise
 '''
 def check_permissions(permission, payload):
-    raise Exception('Not Implemented')
+
+    try:
+        if 'permissions' not in payload:
+            raise AuthError({
+                'code': 'permissions_missing',
+                'description': '"permissions" is expected in payload.'
+            }, 400)
+        
+        if permission not in payload['permissions']:
+            raise AuthError({
+                'code': 'invalid_permissions',
+                'description': 'Payload permissions must include "permission"'
+            }, 400)
+        
+        return True
+        
+    except:
+        raise Exception('Not Implemented')
 
 '''
 @TODO implement verify_decode_jwt(token) method
