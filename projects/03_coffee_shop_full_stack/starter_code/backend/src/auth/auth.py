@@ -7,7 +7,7 @@ from urllib.request import urlopen
 
 AUTH0_DOMAIN = 'ezufsnd.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'https://coffee_shop/'
+API_AUDIENCE = 'http://127.0.0.1:5000'
 
 ## AuthError Exception
 '''
@@ -102,7 +102,7 @@ def check_permissions(permission, payload):
             }, 400)
         
         return True
-        
+
     except:
         raise Exception('Not Implemented')
 
