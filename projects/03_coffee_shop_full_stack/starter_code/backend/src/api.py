@@ -7,10 +7,19 @@ from flask_cors import CORS
 from .database.models import db_drop_and_create_all, setup_db, Drink
 from .auth.auth import AuthError, requires_auth
 
+#________________________REFERENCES____________________________#
+
+# https://auth0.com/docs/quickstart/backend/python/01-authorization
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+
+
+#_____________________INITIALIZE THE APP______________________#
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
+
+#_____________________INITIALIZE THE DATABASE___________________#
 '''
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
@@ -19,7 +28,8 @@ CORS(app)
 '''
 # db_drop_and_create_all()
 
-# ROUTES
+
+#____________________DEFINE ENDPOINTS__________________________#
 '''
 @TODO implement endpoint
     GET /drinks
@@ -76,7 +86,7 @@ CORS(app)
 '''
 
 
-# Error Handling
+#__________________HANDLING ERRORS________________________#
 '''
 Example error handling for unprocessable entity
 '''
@@ -87,7 +97,7 @@ def unprocessable(error):
     return jsonify({
         "success": False,
         "error": 422,
-        "message": "unprocessable"
+        "message": "The request was unable to be followed due to semantic errors"
     }), 422
 
 
@@ -101,17 +111,66 @@ def unprocessable(error):
                     }), 404
 
 '''
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        "success": False,
+        "error": 400,
+        "message": "The server could not understand the request due to invalid syntax."
+    }), 400
 
+@app.errorhandler(401)
+def unauthorized(error):
+    return jsonify({
+      "success": False,
+      "error": 401,
+      "message": "Client must authenticate itself to get the requested resource."
+    }), 401
+
+@app.errorhandler(403)
+def forbiden(error):
+    return jsonify({
+        "success": False,
+        "error": 403,
+        "message": "Client does not have access rights to the requested resource"
+    }), 403
 '''
 @TODO implement error handler for 404
     error handler should conform to general task above
 '''
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "The server can not find the requested resource"
+    }), 404
 
+@app.errorhandler(405)
+def method_not_allowed(error):
+    return jsonify({
+        "success": False,
+        "error": 405,
+        "message": "This method is not allowed for the requested URL"
+    }), 405
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({
+      "success": False,
+      "error": 500,
+      "message": "The server has encountered an internal error"
+    }), 500
 
 '''
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+@app.errorhandler(AuthError)
+def handle_auth_error(exception):
+    response = jsonify(exception.error)
+    response.status_code = exception.status_code
+    return response
 
 if __name__ == "__main__":
     app.debug = True
