@@ -36,17 +36,17 @@ def get_token_auth_header():
 
     try:
         #Fetch the authorization header
-        auth = request.headers.get('Authorization', None)           
+        auth_header = request.headers.get('Authorization', None)           
 
-        if not auth:                                        
-        #If no header is present, raise an error
+        if not auth_header:                                        
+        #If no authorization header is present, raise an error
             raise AuthError({
                 'code': 'authorization_header_missing',
                 'description': 'Authorization header is expected'
             }, 401)
         
-        parts = auth.split()
-        #If there's a header, split it at whitespaces to break it into parts
+        parts = auth_header.split()
+        #If there's an authorization header, split it at whitespaces to break it into parts
 
         if parts[0].lower() != 'bearer':
         #See if the first part contains the string 'bearer', if not raise an error
