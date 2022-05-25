@@ -1,4 +1,5 @@
 import os
+from turtle import title
 from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
@@ -11,9 +12,11 @@ from .auth.auth import AuthError, requires_auth
 
 # https://auth0.com/docs/quickstart/backend/python/01-authorization
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+# https://github.com/ifeanyiEz/trivia_api
 
 
 #_____________________INITIALIZE THE APP______________________#
+
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
@@ -38,7 +41,25 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['GET'])
+def get_drinks():
+    try:
+        # Get all the drinks form the DB and present them in the drink.short() format.
+        all_drinks = Drink.query.all()
+        formatted_drinks = [drink.short() for drink in all_drinks]
 
+        # Confirm that there are drinks in the DB, otherwise show a "not found error message".
+        if len(formatted_drinks) == 0:
+            abort(404)
+
+        #If there are drinks in the DB, show success and the list of drinks.
+        return jsonify({
+            "success": True,
+            "drinks": formatted_drinks
+        })
+    
+    except:
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -48,6 +69,28 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks-detail')
+
+# Ensure that the user has the permissions to access this endpoint
+@requires_auth('get:drinks-detail')
+def get_drinks_detail():
+    try:
+        # Get all the drinks form the DB and present them in the drink.long() format.
+        all_drinks = Drink.query.all()
+        formatted_drinks = [drink.long() for drink in all_drinks]
+
+        # Confirm that there are drinks in the DB, otherwise show a "not found error message".
+        if len(formatted_drinks) == 0:
+            abort(404)
+
+        # If there are drinks in the DB, show success and the list of drinks.
+        return jsonify({
+            "success": True,
+            "drinks": formatted_drinks 
+        })
+
+    except AuthError:
+        abort(403)
 
 
 '''
@@ -59,7 +102,33 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks')
+@requires_auth('post:drinks')
+def make_new_drink():
 
+    data = request.get_json()
+    title = data.get('title', None)
+    recipe = data.get('recipe', None)
+
+    try:
+        new_drink = Drink(title = title, recipe = recipe)
+
+        if new_drink.title == "" or new_drink.recipe == "":
+            return jsonify({
+                "success": False,
+                "message": 'The server could not understand the request due to invalid syntax'
+            }), 400
+
+        else:
+            new_drink.insert()
+
+        return jsonify({
+            "success": True,
+            "drinks": new_drink.long()
+        })
+
+    except AuthError:
+        abort(403)
 
 '''
 @TODO implement endpoint
