@@ -13,6 +13,10 @@ from .auth.auth import AuthError, requires_auth
 # https://auth0.com/docs/quickstart/backend/python/01-authorization
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 # https://github.com/ifeanyiEz/trivia_api
+# https://flask-cors.readthedocs.io/en/latest/
+# https://stackoverflow.com/questions/55497383/how-to-perform-update-partially-in-flask
+# https://www.programiz.com/python-programming/list
+# https://www.programiz.com/python-programming/methods/built-in/list
 
 
 #_____________________INITIALIZE THE APP______________________#
@@ -70,7 +74,6 @@ def get_drinks():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks-detail')
-
 # Ensure that the user has the permissions to access this endpoint
 @requires_auth('get:drinks-detail')
 def get_drinks_detail():
@@ -89,8 +92,8 @@ def get_drinks_detail():
             "drinks": formatted_drinks 
         })
 
-    except AuthError:
-        abort(403)
+    except:
+        abort(422)
 
 
 '''
@@ -103,7 +106,9 @@ def get_drinks_detail():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks')
+# Ensure that the user has the permissions to access this endpoint
 @requires_auth('post:drinks')
+
 def make_new_drink():
 
     data = request.get_json()
@@ -127,8 +132,8 @@ def make_new_drink():
             "drinks": new_drink.long()
         })
 
-    except AuthError:
-        abort(403)
+    except:
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -141,7 +146,40 @@ def make_new_drink():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:drink_id>')
+# Ensure that the user has the permissions to access this endpoint
+@requires_auth('patch:drinks')
 
+def update_drink(drink_id):
+
+    try:
+        drink = Drink.query.filter_by(id = drink_id).one_or_none()
+
+        if drink is None:
+            abort(404)
+
+        data = request.get_json()
+        title = data.get('title', None)
+        recipe = data.get('recipe', None)
+
+        drink.title = title
+        drink.recipe = json.dumps(recipe)
+
+        if drink.title == "" and drink.recipe == "":
+            return jsonify({
+                "success": False,
+                "message": 'The server could not understand the request due to invalid syntax'
+            }), 400
+
+        drink.update()
+
+        return jsonify({
+            "success": True,
+            "drinks": list(drink.long())
+        })
+
+    except:
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -153,6 +191,30 @@ def make_new_drink():
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:drink_id>')
+# Ensure that the user has the permissions to access this endpoint
+@requires_auth('delete:drinks')
+
+def delete_drink(drink_id):
+
+    try:
+        drink = Drink.query.filter_by(id = drink_id).one_or_none()
+
+        if drink is None:
+            abort(404)
+
+        deleted_drink_id = drink.id
+
+        drink.delete()
+
+        return jsonify({
+            "success": True,
+            "delete": deleted_drink_id
+        })
+
+    except:
+        abort(422)
+
 
 
 #__________________HANDLING ERRORS________________________#
