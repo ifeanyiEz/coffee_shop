@@ -17,6 +17,7 @@ from .auth.auth import AuthError, requires_auth
 # https://stackoverflow.com/questions/55497383/how-to-perform-update-partially-in-flask
 # https://www.programiz.com/python-programming/list
 # https://www.programiz.com/python-programming/methods/built-in/list
+# https://stackoverflow.com/questions/12952546/sqlite3-interfaceerror-error-binding-parameter-1-probably-unsupported-type
 
 
 #_____________________INITIALIZE THE APP______________________#
@@ -33,7 +34,7 @@ CORS(app)
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this function will add one
 '''
-db_drop_and_create_all()
+#db_drop_and_create_all()
 
 
 #____________________DEFINE ENDPOINTS__________________________#
@@ -73,11 +74,13 @@ def get_drinks():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks-detail')
+@app.route('/drinks-detail', methods=['GET'])
 # Ensure that the user has the permissions to access this endpoint
 @requires_auth('get:drinks-detail')
-def get_drinks_detail():
+def get_drinks_detail(payload):
+
     try:
+
         # Get all the drinks form the DB and present them in the drink.long() format.
         all_drinks = Drink.query.all()
         formatted_drinks = [drink.long() for drink in all_drinks]
@@ -96,6 +99,25 @@ def get_drinks_detail():
         abort(422)
 
 
+
+@app.route('/drinks/<int:drink_id>', methods=['GET'])
+@requires_auth('get:drinks')
+def get_drink_by_id(payload, drink_id):
+    try:
+        drink = Drink.query.filter_by(id = drink_id).one_or_none()
+        if drink is None:
+            abort(404)
+        
+        formatted_drink = drink.long()
+
+        return jsonify({
+            "success": True,
+            "drink": formatted_drink
+        })
+    except:
+        abort(422)
+
+        
 '''
 @TODO implement endpoint
     POST /drinks
@@ -105,18 +127,17 @@ def get_drinks_detail():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks')
+@app.route('/drinks', methods=['POST'])
 # Ensure that the user has the permissions to access this endpoint
 @requires_auth('post:drinks')
-
-def make_new_drink():
+def make_new_drink(payload):
 
     data = request.get_json()
     title = data.get('title', None)
     recipe = data.get('recipe', None)
 
     try:
-        new_drink = Drink(title = title, recipe = recipe)
+        new_drink = Drink(title = title, recipe = json.dumps(recipe))
 
         if new_drink.title == "" or new_drink.recipe == "":
             return jsonify({
@@ -146,11 +167,10 @@ def make_new_drink():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/<int:drink_id>')
+@app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 # Ensure that the user has the permissions to access this endpoint
 @requires_auth('patch:drinks')
-
-def update_drink(drink_id):
+def update_drink(payload, drink_id):
 
     try:
         drink = Drink.query.filter_by(id = drink_id).one_or_none()
@@ -173,9 +193,11 @@ def update_drink(drink_id):
 
         drink.update()
 
+        updated_drink = Drink.query.filter_by(id = drink_id).one_or_none()
+
         return jsonify({
             "success": True,
-            "drinks": list(drink.long())
+            "drinks": updated_drink.long()
         })
 
     except:
@@ -191,11 +213,11 @@ def update_drink(drink_id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/<int:drink_id>')
+@app.route('/drinks/<int:drink_id>', methods=['DELETE'])
 # Ensure that the user has the permissions to access this endpoint
 @requires_auth('delete:drinks')
 
-def delete_drink(drink_id):
+def delete_drink(payload, drink_id):
 
     try:
         drink = Drink.query.filter_by(id = drink_id).one_or_none()
