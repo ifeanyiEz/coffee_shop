@@ -29,7 +29,7 @@ CORS(app)
 
 #_____________________INITIALIZE THE DATABASE___________________#
 '''
-@TODO uncomment the following line to initialize the datbase
+DONE uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this function will add one
@@ -39,7 +39,7 @@ CORS(app)
 
 #____________________DEFINE ENDPOINTS__________________________#
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     GET /drinks
         it should be a public endpoint
         it should contain only the drink.short() data representation
@@ -67,7 +67,7 @@ def get_drinks():
         abort(422)
 
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     GET /drinks-detail
         it should require the 'get:drinks-detail' permission
         it should contain the drink.long() data representation
@@ -98,8 +98,12 @@ def get_drinks_detail(payload):
     except:
         abort(422)
 
+'''
+This is a new endpoint.
+It is added to allow users with proper permissions to retrieve and view details of a specific drink, then decide how/what to PATCH.
+Also it allows permitted users to view a drink before deciding to DELETE
 
-
+'''
 @app.route('/drinks/<int:drink_id>', methods=['GET'])
 @requires_auth('get:drinks')
 def get_drink_by_id(payload, drink_id):
@@ -119,7 +123,7 @@ def get_drink_by_id(payload, drink_id):
 
         
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     POST /drinks
         it should create a new row in the drinks table
         it should require the 'post:drinks' permission
@@ -157,7 +161,7 @@ def make_new_drink(payload):
         abort(422)
 
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     PATCH /drinks/<id>
         where <id> is the existing model id
         it should respond with a 404 error if <id> is not found
@@ -204,7 +208,7 @@ def update_drink(payload, drink_id):
         abort(422)
 
 '''
-@TODO implement endpoint
+@DONE implement endpoint
     DELETE /drinks/<id>
         where <id> is the existing model id
         it should respond with a 404 error if <id> is not found
@@ -225,9 +229,9 @@ def delete_drink(payload, drink_id):
         if drink is None:
             abort(404)
 
-        deleted_drink_id = drink.id
-
         drink.delete()
+
+        deleted_drink_id = drink.id
 
         return jsonify({
             "success": True,
@@ -255,7 +259,7 @@ def unprocessable(error):
 
 
 '''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
+@DONE implement error handlers using the @app.errorhandler(error) decorator
     each error handler should return (with approprate messages):
              jsonify({
                     "success": False,
@@ -288,7 +292,7 @@ def forbiden(error):
         "message": "Client does not have access rights to the requested resource"
     }), 403
 '''
-@TODO implement error handler for 404
+@DONE implement error handler for 404
     error handler should conform to general task above
 '''
 @app.errorhandler(404)
@@ -316,7 +320,7 @@ def internal_error(error):
     }), 500
 
 '''
-@TODO implement error handler for AuthError
+@DONE implement error handler for AuthError
     error handler should conform to general task above
 '''
 @app.errorhandler(AuthError)
