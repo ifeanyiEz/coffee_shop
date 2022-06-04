@@ -24,7 +24,7 @@ class AuthError(Exception):
 ## Auth Header
 
 '''
-@TODO implement get_token_auth_header() method
+@DONE implement get_token_auth_header() method
     it should attempt to get the header from the request
         it should raise an AuthError if no header is present
     it should attempt to split bearer and the token
@@ -33,52 +33,49 @@ class AuthError(Exception):
 '''
 def get_token_auth_header():                    
     #Obtains access tokens from the authorization header
+ 
+    #Fetch the authorization header
+    auth_header = request.headers.get('Authorization', None)           
+                                            
+    #If no authorization header is present, raise an error.
+    if not auth_header:
+        raise AuthError({
+            'code': 'authorization_header_missing',
+            'description': 'Authorization header is expected'
+        }, 401)
+    
+    #If there's an authorization header, split it at whitespaces to break it into parts.
+    parts = auth_header.split()
+    
+    #See if the first part contains the string 'bearer', if not raise an error
+    if parts[0].lower() != 'bearer':
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Authorization header must start with "Bearer".'
+        }, 401)
+    
+    
+    #If the first part contains 'bearer', confirm that there's a second part
+    elif len(parts) == 1:
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Token not found.'
+        }, 401)
+    
+    #If there's a second part, confirm that there are only two parts
+    elif len(parts) > 2:
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Authorization header must be bearer token.'
+        }, 401)
 
-    try:
-        #Fetch the authorization header
-        auth_header = request.headers.get('Authorization', None)           
-                                                
-        #If no authorization header is present, raise an error.
-        if not auth_header:
-            raise AuthError({
-                'code': 'authorization_header_missing',
-                'description': 'Authorization header is expected'
-            }, 401)
-        
-        #If there's an authorization header, split it at whitespaces to break it into parts.
-        parts = auth_header.split()
-        
-        #See if the first part contains the string 'bearer', if not raise an error
-        if parts[0].lower() != 'bearer':
-            raise AuthError({
-                'code': 'invalid_header',
-                'description': 'Authorization header must start with "Bearer".'
-            }, 401)
-        
-        
-        #If the first part contains 'bearer', confirm that there's a second part
-        elif len(parts) == 1:
-            raise AuthError({
-                'code': 'invalid_header',
-                'description': 'Token not found.'
-            }, 401)
-        
-        #If there's a second part, confirm that there are only two parts
-        elif len(parts) > 2:
-            raise AuthError({
-                'code': 'invalid_header',
-                'description': 'Authorization header must be bearer token.'
-            }, 401)
+    #If everything is fine, return the second part as the token.
+    token = parts[1]
+    return token
 
-        #If everything is fine, return the second part as the token.
-        token = parts[1]
-        return token
-
-    except:
-        raise Exception('Not Implemented')
 
 '''
-@TODO implement check_permissions(permission, payload) method
+@DONE implement check_permissions(permission, payload) method
     @INPUTS
         permission: string permission (i.e. 'post:drink')
         payload: decoded jwt payload
@@ -89,30 +86,27 @@ def get_token_auth_header():
     return true otherwise
 '''
 def check_permissions(permission, payload):
+    
+    if 'permissions' not in payload:
+    #If payload does not contain permissions raise an error.
+        raise AuthError({
+            'code': 'permissions_missing',
+            'description': '"permissions" is expected in payload.'
+        }, 400)
+    
+    if permission not in payload['permissions']:
+    #If the specified permission is not in payload permissions, raise an error
+        raise AuthError({
+            'code': 'invalid_permissions',
+            'description': 'Payload permissions must include "permission"'
+        }, 401)
+    
+    #If everytihng is okay, return True
+    return True
 
-    try:
-        if 'permissions' not in payload:
-        #If payload does not contain permissions raise an error.
-            raise AuthError({
-                'code': 'permissions_missing',
-                'description': '"permissions" is expected in payload.'
-            }, 400)
-        
-        if permission not in payload['permissions']:
-        #If the specified permission is not in payload permissions, raise an error
-            raise AuthError({
-                'code': 'invalid_permissions',
-                'description': 'Payload permissions must include "permission"'
-            }, 400)
-        
-        #If everytihng is okay, return True
-        return True
-
-    except:
-        raise Exception('Not Implemented')
 
 '''
-@TODO implement verify_decode_jwt(token) method
+@DONE implement verify_decode_jwt(token) method
     @INPUTS
         token: a json web token (string)
 
@@ -126,67 +120,63 @@ def check_permissions(permission, payload):
 '''
 def verify_decode_jwt(token):
 
-    try:
-        jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
-        jwks = json.loads(jsonurl.read())
-        unverified_header = jwt.get_unverified_header(token)
+    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+    jwks = json.loads(jsonurl.read())
+    unverified_header = jwt.get_unverified_header(token)
 
-        rsa_key = {}
+    rsa_key = {}
 
-        if 'kid' not in unverified_header:
-            raise AuthError({
-                'code': 'invalid_header',
-                'description': 'Authorization malformed'
-            }, 401)
-        
-        for key in jwks['keys']:
-            if key['kid'] == unverified_header['kid']:
-                rsa_key = {
-                    'kty': key['kty'],
-                    'kid': key['kid'],
-                    'use': key['use'],
-                    'n': key['n'],
-                    'e': key['e']
-                }
-        if rsa_key:
-            try:
-                payload = jwt.decode(
-                    token,
-                    rsa_key,
-                    algorithms=ALGORITHMS,
-                    audience=API_AUDIENCE,
-                    issuer='https://' + AUTH0_DOMAIN + '/'
-                )
-                return payload
-
-            except jwt.ExpiredSignatureError:
-                raise AuthError({
-                    'code': 'token_expired',
-                    'description': 'Token has expired.'
-                }, 401)
-
-            except jwt.JWTClaimsError:
-                raise AuthError({
-                    'code': 'invalid_claims',
-                    'description': 'Incorrect claims. Please check the audience and issuer.'
-                }, 401)
-
-            except Exception:
-                raise AuthError({
-                    'code': 'invalid_header',
-                    'description': 'Invalid header. Unable to parse authentication token.'
-                }, 400)
-
+    if 'kid' not in unverified_header:
         raise AuthError({
             'code': 'invalid_header',
-            'description': 'Invalid header. Unable to find appropriate key.'
-        }, 400)
+            'description': 'Authorization malformed'
+        }, 401)
+    
+    for key in jwks['keys']:
+        if key['kid'] == unverified_header['kid']:
+            rsa_key = {
+                'kty': key['kty'],
+                'kid': key['kid'],
+                'use': key['use'],
+                'n': key['n'],
+                'e': key['e']
+            }
+    if rsa_key:
+        try:
+            payload = jwt.decode(
+                token,
+                rsa_key,
+                algorithms=ALGORITHMS,
+                audience=API_AUDIENCE,
+                issuer='https://' + AUTH0_DOMAIN + '/'
+            )
+            return payload
 
-    except:
-        raise Exception('Not Implemented')
+        except jwt.ExpiredSignatureError:
+            raise AuthError({
+                'code': 'token_expired',
+                'description': 'Token has expired.'
+            }, 401)
+
+        except jwt.JWTClaimsError:
+            raise AuthError({
+                'code': 'invalid_claims',
+                'description': 'Incorrect claims. Please check the audience and issuer.'
+            }, 401)
+
+        except Exception:
+            raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Invalid header. Unable to parse authentication token.'
+            }, 400)
+
+    raise AuthError({
+        'code': 'invalid_header',
+        'description': 'Invalid header. Unable to find appropriate key.'
+    }, 400)
 
 '''
-@TODO implement @requires_auth(permission) decorator method
+@DONE implement @requires_auth(permission) decorator method
     @INPUTS
         permission: string permission (i.e. 'post:drink')
 
