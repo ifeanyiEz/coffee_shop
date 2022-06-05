@@ -313,6 +313,10 @@ def delete_drink(payload, drink_id):
     except:
         abort(422)
 
+
+#_____________________________Login/Logout____________________________________#
+
+
 # @app.route('/login')
 # @requires_auth()
 # def login_user():
@@ -328,6 +332,7 @@ def logout_user():
 
 
 #__________________HANDLING ERRORS________________________#
+
 '''
 Example error handling for unprocessable entity
 '''
