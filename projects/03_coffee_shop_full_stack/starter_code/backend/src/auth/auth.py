@@ -99,7 +99,7 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'invalid_permissions',
             'description': 'Payload permissions must include "permission"'
-        }, 401)
+        }, 403)
     
     #If everytihng is okay, return True
     return True
