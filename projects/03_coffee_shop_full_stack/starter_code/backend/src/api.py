@@ -313,7 +313,7 @@ def delete_drink(payload, drink_id):
 @app.route('/logout')
 def logout_user():
     session.clear()
-    return redirect(url_for('get_drinks'))
+    return redirect('https://ezufsnd.us.auth0.com/u/login')
 
 
 #__________________HANDLING ERRORS________________________#
