@@ -22,6 +22,7 @@ from .auth.auth import AuthError, requires_auth, verify_decode_jwt
 # https://dfarq.homeip.net/json-loads-vs-json-dumps-in-python/
 # https://stackoverflow.com/questions/12952546/sqlite3-interfaceerror-error-binding-parameter-1-probably-unsupported-type
 # https://www.tutorialspoint.com/sqlalchemy/sqlalchemy_orm_updating_objects.htm
+# https://github.com/david4096/flask-auth0-example/blob/master/app.py
 
 
 #_____________________INITIALIZE THE APP______________________#
