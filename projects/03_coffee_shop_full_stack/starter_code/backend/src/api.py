@@ -18,6 +18,7 @@ from .auth.auth import AuthError, requires_auth
 # https://stackoverflow.com/questions/55497383/how-to-perform-update-partially-in-flask
 # https://www.programiz.com/python-programming/list
 # https://www.programiz.com/python-programming/methods/built-in/list
+# https://dfarq.homeip.net/json-loads-vs-json-dumps-in-python/
 # https://stackoverflow.com/questions/12952546/sqlite3-interfaceerror-error-binding-parameter-1-probably-unsupported-type
 # https://www.tutorialspoint.com/sqlalchemy/sqlalchemy_orm_updating_objects.htm
 
