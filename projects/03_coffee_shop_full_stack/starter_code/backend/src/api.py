@@ -316,7 +316,7 @@ def delete_drink(payload, drink_id):
 # @app.route('/login')
 # @requires_auth()
 # def login_user():
-#     return redirect('https://ezufsnd.us.auth0.com/u/login')
+#     return auth0.authorize_redirect(redirect_uri='CALLBACK_URL')
 
 @app.route('/logout')
 @requires_auth()
