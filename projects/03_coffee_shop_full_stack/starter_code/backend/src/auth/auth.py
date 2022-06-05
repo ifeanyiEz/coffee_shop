@@ -120,18 +120,26 @@ def check_permissions(permission, payload):
 '''
 def verify_decode_jwt(token):
 
+    # Set the contents of the open url to a variable: jsonurl
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+
+    # Read the contents and convert it to a json object: jwks
     jwks = json.loads(jsonurl.read())
+
     unverified_header = jwt.get_unverified_header(token)
 
+    # Set the rsa_key as an empty dictionary
     rsa_key = {}
 
+    # If the unverified header does not contain a Key Id, raise an "invalid_header" AuthError
     if 'kid' not in unverified_header:
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Authorization malformed'
         }, 401)
     
+    # For every key in jwks keys, check to see if the key id matches the key id of the unverified header
+    # If there's a match, populate the rsa_key dictionary with key: value pairs
     for key in jwks['keys']:
         if key['kid'] == unverified_header['kid']:
             rsa_key = {
@@ -141,6 +149,8 @@ def verify_decode_jwt(token):
                 'n': key['n'],
                 'e': key['e']
             }
+    
+    # If the rsa_key dictionary has valid elements, create a payload and return payload with decoded content
     if rsa_key:
         try:
             payload = jwt.decode(
@@ -152,24 +162,28 @@ def verify_decode_jwt(token):
             )
             return payload
 
+        # If the payload contains an expired token, raise a "token_expired" AuthError
         except jwt.ExpiredSignatureError:
             raise AuthError({
                 'code': 'token_expired',
                 'description': 'Token has expired.'
             }, 401)
 
+        # If it contains invalid claims, raise an "invalid_claims" AuthError
         except jwt.JWTClaimsError:
             raise AuthError({
                 'code': 'invalid_claims',
                 'description': 'Incorrect claims. Please check the audience and issuer.'
             }, 401)
 
+        # If other exception occours, raise an "invlaid_header" AuthError
         except Exception:
             raise AuthError({
                 'code': 'invalid_header',
                 'description': 'Invalid header. Unable to parse authentication token.'
             }, 400)
 
+    # If the rsa_key dictionary has no valid elements, raise an "invalid_header" AuthError.
     raise AuthError({
         'code': 'invalid_header',
         'description': 'Invalid header. Unable to find appropriate key.'
