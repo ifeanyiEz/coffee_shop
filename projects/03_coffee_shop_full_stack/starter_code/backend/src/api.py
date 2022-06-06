@@ -4,11 +4,10 @@ from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
-from flask import session, redirect, url_for
-from flask_caching import Cache
+
 
 from .database.models import db_drop_and_create_all, setup_db, Drink
-from .auth.auth import AuthError, requires_auth, verify_decode_jwt
+from .auth.auth import AuthError, requires_auth
 
 #________________________REFERENCES____________________________#
 
@@ -30,8 +29,6 @@ from .auth.auth import AuthError, requires_auth, verify_decode_jwt
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
-cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
-cache.init_app(app)
 
 #_____________________INITIALIZE THE DATABASE___________________#
 '''
@@ -313,22 +310,6 @@ def delete_drink(payload, drink_id):
     except:
         abort(422)
 
-
-#_____________________________Login/Logout____________________________________#
-
-
-# @app.route('/login')
-# @requires_auth()
-# def login_user():
-#     return auth0.authorize_redirect(redirect_uri='CALLBACK_URL')
-
-@app.route('/logout')
-@requires_auth()
-def logout_user():
-    key = session.get('key')
-    session.clear()
-    cache.set(key, None)
-    return redirect('https://ezufsnd.us.auth0.com/u/login?access_token={}&?client_id=RuBUGVhuWSJL7dBoWekcOeOf462x3NL7'.format(key), 'http://localhost:8100')
 
 
 #__________________HANDLING ERRORS________________________#
